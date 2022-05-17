@@ -1,4 +1,5 @@
 ﻿using FoodDeliveringDomain.Models;
+using HotChocolate.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -118,23 +119,24 @@ namespace UserService.GraphQL
             return await Task.FromResult(new UserToken(null, null, Message: "Username or password was invalid"));
         }
 
-        //public async Task<User> UpdatePasswordUserAsync( 
-        //  RegisterUser  input,
-        //   [Service] FoodDeliveringAppContext context)
-        //{
-        //    var user = context.Users.Where(o => o.UserName == input.UserName).FirstOrDefault();
-        //    if (user != null)
-        //    {
-        //        user.FullName = input.FullName;
-        //        user.Email = input.Email;
-        //        user.UserName = input.UserName;
-        //        user.Password = input.Password;
+        [Authorize]
+        public async Task<User> UpdatePasswordUserAsync(
+            UserInput input,
+           [Service] FoodDeliveringAppContext context)
+        {
+            var user = context.Users.Where(o => o.Id == input.Id).FirstOrDefault();
+            if (user != null)
+            {
+                user.FullName = input.FullName;
+                user.Email = input.Email;
+                user.UserName = input.UserName;
+                user.Password = BCrypt.Net.BCrypt.HashPassword(input.Password);
 
 
-        //        context.Users.Update(user);
-        //        await context.SaveChangesAsync();
-        //    }
-        //    return await Task.FromResult(user);
-        //}
+                context.Users.Update(user);
+                await context.SaveChangesAsync();
+            }
+            return await Task.FromResult(user);
+        }
     }
 }
