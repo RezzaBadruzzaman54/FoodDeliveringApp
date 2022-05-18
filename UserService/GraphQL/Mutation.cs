@@ -121,10 +121,80 @@ namespace UserService.GraphQL
 
         [Authorize]
         public async Task<User> UpdatePasswordUserAsync(
-            UserInput input,
+            UserChangePasswordInput input,
            [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(o => o.Id == input.Id).FirstOrDefault();
+            if (user != null)
+            {
+
+                user.Password = BCrypt.Net.BCrypt.HashPassword(input.Password);
+
+
+                context.Users.Update(user);
+                await context.SaveChangesAsync();
+            }
+
+            return await Task.FromResult(user);
+        }
+
+        //Manage User By Admin
+        [Authorize(Roles = new[] { "ADMIN" })]
+        public async Task<Buyer> AddUserToBuyerAsync(
+           AddUserToBuyerInput input,
+           [Service] FoodDeliveringAppContext context)
+        {
+            var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
+            if (user == null)
+            {
+                return await Task.FromResult(new Buyer());
+            }
+            // EF
+            var buyer = new Buyer
+            {
+                UserId = input.UserId,
+                RoleId = input.RoleId,
+                Address = input.Address
+
+            };
+
+            var ret = context.Buyers.Add(buyer);
+            await context.SaveChangesAsync();
+
+            return ret.Entity;
+        }
+
+       // [Authorize(Roles = new[] { "ADMIN" })]
+        public async Task<Courier> AddUserToCourierAsync(
+          AddUserToCourierInput input,
+          [Service] FoodDeliveringAppContext context)
+        {
+            var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
+            if (user == null)
+            {
+                return await Task.FromResult(new Courier());
+            }
+            // EF
+            var courier = new Courier
+            {
+                UserId = input.UserId,
+                RoleId = input.RoleId,
+                NumberOfVehicles = input.NumberOfVehicles
+
+            };
+
+            var ret = context.Couriers.Add(courier);
+            await context.SaveChangesAsync();
+
+            return ret.Entity;
+        }
+
+        [Authorize(Roles = new[] { "ADMIN" })]
+        public async Task<User> UpdateUserAsync(
+         UserInput input,
+         [Service] FoodDeliveringAppContext context)
+        {
+            var user = context.Users.Where(u => u.Id == input.Id).FirstOrDefault();
             if (user != null)
             {
                 user.FullName = input.FullName;
@@ -132,11 +202,25 @@ namespace UserService.GraphQL
                 user.UserName = input.UserName;
                 user.Password = BCrypt.Net.BCrypt.HashPassword(input.Password);
 
-
                 context.Users.Update(user);
                 await context.SaveChangesAsync();
             }
             return await Task.FromResult(user);
         }
+
+        [Authorize(Roles = new[] { "ADMIN" })]
+        public async Task<User> DeletUsertByIdAsync(
+          int id,
+          [Service] FoodDeliveringAppContext context)
+        {
+            var user = context.Users.Where(o => o.Id == id).FirstOrDefault();
+            if (user != null)
+            {
+                context.Users.Remove(user);
+                await context.SaveChangesAsync();
+            }
+            return await Task.FromResult(user);
+        }
+
     }
 }
