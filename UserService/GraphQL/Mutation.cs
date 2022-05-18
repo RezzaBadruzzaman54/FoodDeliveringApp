@@ -164,7 +164,7 @@ namespace UserService.GraphQL
             return ret.Entity;
         }
 
-       // [Authorize(Roles = new[] { "ADMIN" })]
+        [Authorize(Roles = new[] { "ADMIN" })]
         public async Task<Courier> AddUserToCourierAsync(
           AddUserToCourierInput input,
           [Service] FoodDeliveringAppContext context)
@@ -184,6 +184,31 @@ namespace UserService.GraphQL
             };
 
             var ret = context.Couriers.Add(courier);
+            await context.SaveChangesAsync();
+
+            return ret.Entity;
+        }
+
+        [Authorize(Roles = new[] { "ADMIN" })]
+        public async Task<Employee> AddUserToEmployeeAsync(
+         AddUserToEmployeeInput input,
+         [Service] FoodDeliveringAppContext context)
+        {
+            var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
+            if (user == null)
+            {
+                return await Task.FromResult(new Employee());
+            }
+            // EF
+            var employee = new Employee
+            {
+                UserId = input.UserId,
+                RoleId = input.RoleId,
+                EmployeeNumber = input.EmployeeNumber
+
+            };
+
+            var ret = context.Employees.Add(employee);
             await context.SaveChangesAsync();
 
             return ret.Entity;
