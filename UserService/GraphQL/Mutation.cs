@@ -1,5 +1,6 @@
 ﻿using FoodDeliveringDomain.Models;
 using HotChocolate.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
@@ -60,16 +61,6 @@ namespace UserService.GraphQL
                 // jwt payload
                 var claims = new List<Claim>();
                 claims.Add(new Claim(ClaimTypes.Name, user.UserName));
-
-                //var userRoles = context.UserRoles.Where(o => o.Id == user.Id).ToList();
-                //foreach (var userRole in userRoles)
-                //{
-                //    var role = context.Roles.Where(o => o.Id == userRole.RoleId).FirstOrDefault();
-                //    if (role != null)
-                //    {
-                //        claims.Add(new Claim(ClaimTypes.Role, role.Name));
-                //    }
-                //}
 
                 var userBuyers = context.Buyers.Where(b => b.UserId == user.Id).ToList();
                 foreach (var userBuyer in userBuyers)
@@ -145,7 +136,7 @@ namespace UserService.GraphQL
            [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
-            if (user == null)
+            if (user != null)
             {
                 return await Task.FromResult(new Buyer());
             }
@@ -164,13 +155,13 @@ namespace UserService.GraphQL
             return ret.Entity;
         }
 
-        [Authorize(Roles = new[] { "ADMIN" })]
+        [Authorize(Roles = new[] { "ADMIN", "MANAGER" })]
         public async Task<Courier> AddUserToCourierAsync(
           AddUserToCourierInput input,
           [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
-            if (user == null)
+            if (user != null)
             {
                 return await Task.FromResult(new Courier());
             }
@@ -195,7 +186,7 @@ namespace UserService.GraphQL
          [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
-            if (user == null)
+            if (user != null)
             {
                 return await Task.FromResult(new Employee());
             }
@@ -247,5 +238,55 @@ namespace UserService.GraphQL
             return await Task.FromResult(user);
         }
 
+        //manage courier by manager
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public async Task<CourierData> UpdateCourierAsync(
+         CourierInput input,
+         [Service] FoodDeliveringAppContext context)
+        {
+            var courier = context.Couriers.Include(c=>c.User).Where(c =>c.Id == input.Id).FirstOrDefault();
+            if (courier != null)
+            {
+                courier.UserId = input.UserId;
+                courier.RoleId = input.RoleId;
+                courier.NumberOfVehicles = input.NumberOfVehicles;
+                courier.User.FullName = input.FullName;
+                courier.User.Email = input.Email;
+                courier.User.UserName = input.UserName;
+                courier.User.Password = BCrypt.Net.BCrypt.HashPassword(input.Password);
+
+                context.Couriers.Update(courier);
+                await context.SaveChangesAsync();
+                context.Users.Update(courier.User);
+                await context.SaveChangesAsync();
+            }
+            //return await Task.FromResult(courier);
+
+            return await Task.FromResult(new CourierData
+            {
+                Id = courier.Id,
+                UserId = courier.UserId,
+                RoleId = courier.RoleId,
+                NumberOfVehicles = courier.NumberOfVehicles,
+                FullName = courier.User.FullName,
+                Email = courier.User.Email,
+                UserName = courier.User.UserName,
+                Password = courier.User.Password
+            });
+        }
+
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public async Task<Courier> DeleteCourierByIdAsync(
+         int id,
+         [Service] FoodDeliveringAppContext context)
+        {
+            var courier = context.Couriers.Where(o => o.Id == id).FirstOrDefault();
+            if (courier != null)
+            {
+                context.Couriers.Remove(courier);
+                await context.SaveChangesAsync();
+            }
+            return await Task.FromResult(courier);
+        }
     }
 }

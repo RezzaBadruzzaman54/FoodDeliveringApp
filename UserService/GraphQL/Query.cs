@@ -17,6 +17,21 @@ namespace UserService.GraphQL
              UserName = p.UserName
          });
 
+        [Authorize(Roles = new[] { "ADMIN" })] // dapat diakses kalau sudah login
+        public IQueryable<Buyer> GetBuyers([Service] FoodDeliveringAppContext context) =>
+        context.Buyers;
+
+        [Authorize(Roles = new[] { "MANAGER" })]
+        public IQueryable<CourierData> GetCouriers([Service] FoodDeliveringAppContext context) =>
+         context.Couriers.Include(c=>c.User).Select(p => new CourierData()
+         {
+             Id = p.Id,
+             UserName = p.User.UserName,
+             FullName = p.User.FullName,
+             Email = p.User.Email,
+             NumberOfVehicles = p.NumberOfVehicles
+         });
+
         [Authorize] // dapat diakses kalau sudah login
         public IQueryable<ProfilUserData> GetProfileUser(
             [Service] FoodDeliveringAppContext context,
