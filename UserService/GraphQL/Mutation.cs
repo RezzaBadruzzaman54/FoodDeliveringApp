@@ -137,7 +137,7 @@ namespace UserService.GraphQL
            [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
-            if (user != null)
+            if (user == null)
             {
                 return await Task.FromResult(new Buyer());
             }
@@ -162,7 +162,7 @@ namespace UserService.GraphQL
           [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
-            if (user != null)
+            if (user == null)
             {
                 return await Task.FromResult(new Courier());
             }
@@ -187,7 +187,7 @@ namespace UserService.GraphQL
          [Service] FoodDeliveringAppContext context)
         {
             var user = context.Users.Where(u => u.Id == input.UserId).FirstOrDefault();
-            if (user != null)
+            if (user == null)
             {
                 return await Task.FromResult(new Employee());
             }

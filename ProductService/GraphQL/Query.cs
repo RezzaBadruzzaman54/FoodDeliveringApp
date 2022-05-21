@@ -14,10 +14,11 @@ namespace ProductService.GraphQL
         [Authorize(Roles = new[] { "BUYER" })]
         public IQueryable<ProductWithCategoryData> GetFoodByCategoryName([Service] FoodDeliveringAppContext context, string categoryName)
         {
-            var productByCategory = context.Products.Include(p => p.Category).Where(c => c.Name == categoryName).FirstOrDefault();
+            var category = context.Categories.Where(c=>c.Name == categoryName).FirstOrDefault();
+            var productByCategory = context.Products.Include(p => p.Category).Where(/*p=>p.Category.Name == categoryName &&*/p=> p.CategoryId == category.Id ).FirstOrDefault();
             if(productByCategory != null)
             {
-                return context.Products.Include(p => p.Category).Where(c => c.Name == categoryName).Select(p => new ProductWithCategoryData()
+                return context.Products.Include(p => p.Category).Where(p=> p.CategoryId == productByCategory.CategoryId ).Select(p => new ProductWithCategoryData()
                 {
                     FoodId = p.Id,
                     FoodName = p.Name,
@@ -26,6 +27,7 @@ namespace ProductService.GraphQL
                     Price = p.Price
                 });
             }
+           
             return new List<ProductWithCategoryData>().AsQueryable();
         }
     }
