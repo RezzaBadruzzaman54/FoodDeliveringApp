@@ -1,4 +1,5 @@
-﻿using FoodDeliveringDomain.Models;
+﻿//using FoodDeliveringDomain.Models;
+using FoodDeliveringAppDomain.Models;
 using HotChocolate.AspNetCore.Authorization;
 
 namespace ProductService.GraphQL

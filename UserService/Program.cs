@@ -1,4 +1,5 @@
-using FoodDeliveringDomain.Models;
+//using FoodDeliveringDomain.Models;
+using FoodDeliveringAppDomain.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
